@@ -163,7 +163,7 @@ exports.author_delete_post = function (req, res, next) {
 		}
 		else {
 			// Author has no books. Delete object and redirect to the list of authors.
-			Author.findByIdAndRemove(req.body.authorid, function (err) {
+			Author.findByIdAndRemove(req.body.authorid, function deleteAuthor (err) {
 				if (err) {
 					return next(err);
 				}
@@ -221,7 +221,7 @@ exports.author_update_post = [
 			first_name: req.body.first_name,
 			family_name: req.body.family_name,
 			date_of_birth: req.body.date_of_birth,
-			date_of_death: req.body.date_of_death
+			date_of_death: req.body.date_of_death,
 			_id: req.params.id // this is needed, if not then the object will be assigned a new id
 		});
 

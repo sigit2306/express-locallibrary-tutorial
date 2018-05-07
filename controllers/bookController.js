@@ -190,14 +190,74 @@ exports.book_create_post = [
 ];
 
 // Display book delete form on GET.
-exports.book_delete_get = function(req, res) {
+/*exports.book_delete_get = function(req, res) {
     res.send('NOT IMPLEMENTED: Book delete GET');
+};*/
+exports.book_delete_get = function (req, res, next) {
+	async.parallel({
+		book: function (callback) {
+			Book.findById(req.params.id)
+				.populate("author")
+				.populate("genre")
+				.exec(callback);
+		},
+		book_bookinstances: function (callback) {
+			BookInstance.find({ "book": req.params.id})
+				.exec(callback);
+		}
+	}, function (err, results) {
+		if (err) {
+			return next(err);
+		}
+		if (results.book == null) { // no results
+			res.redirect("/catalog/books");
+		}
+		// successful, so render
+		res.render("book_delete", { title: "Delete Book", book: results.book, book_instances: results.book_bookinstances });
+	});
 };
 
 // Handle book delete on POST.
-exports.book_delete_post = function(req, res) {
+/*exports.book_delete_post = function(req, res) {
     res.send('NOT IMPLEMENTED: Book delete POST');
+};*/
+exports.book_delete_post = function (req, res, next) {
+	// assumes the post has valid id (ie no validation/sanitization)
+
+	async.parallel({
+		book: function (callback) {
+			Book.findById(req.params.id)
+				.populate("author")
+				.populate("genre")
+				.exec(callback);
+		},
+		book_bookinstances: function (callback) {
+			BookInstance.find({ "book": req.params.id })
+				.exec(callback);
+		}
+	}, function (err, results) {
+		if (err) {
+			return next(err);
+		}
+		if (results.book_bookinstances.length > 0) {
+			// book has book_instance. render the same way as for GET route
+			res.render("book_delete", { title: "Delete Book", book: results.book, book_instances: results.book_bookinstances });
+			return;
+		}
+		else {
+			// book has no BookInstance objects. delete object and redirect to the list of books.
+			Book.findByIdAndRemove(req.body.id, function deleteBook(err) {
+				if (err) {
+					return next(err);
+				}
+				// success - go to books list
+				res.redirect("/catalog/books");
+			});
+		}
+	});
 };
+
+
 
 // Display book update form on GET.
 /*exports.book_update_get = function(req, res) {
